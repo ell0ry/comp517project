@@ -16,6 +16,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>$(EASYHOOK_LIB_NAME);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(EASYHOOK_DLL_PATH);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>$(BUILD_EVENT_COPY_EASYHOOK_DLL_TO_BUILD_DIR)</Command>
