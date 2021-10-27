@@ -2,7 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ImportGroup Label="PropertySheets" />
   <PropertyGroup Label="UserMacros">
-    <EASYHOOK_DLL_PATH>$(ProjectDir)\EasyHook-2.7.6789.0-Binaries\projects\easyhook\Deploy\NetFX3.5</EASYHOOK_DLL_PATH>
+    <EASYHOOK_DLL_PATH>$(SolutionDir)EasyHook-2.7.6789.0-Binaries\projects\easyhook\Deploy\NetFX3.5</EASYHOOK_DLL_PATH>
     <EASYHOOK_LIB_NAME>easyhook64.lib</EASYHOOK_LIB_NAME>
     <BUILD_EVENT_COPY_EASYHOOK_DLL_TO_BUILD_DIR>xcopy /y /d "$(EASYHOOK_DLL_PATH)\EasyHook64.dll" "$(OutDir)"</BUILD_EVENT_COPY_EASYHOOK_DLL_TO_BUILD_DIR>
   </PropertyGroup>
