@@ -2,7 +2,7 @@
 #include <iostream>
 #include <Windows.h>
 #include <easyhook.h>
-
+#include <functional>
 //BOOL GetDiskFreeSpaceA(
 //    [in]  LPCSTR  lpRootPathName,
 //    [out] LPDWORD lpSectorsPerCluster,
@@ -10,6 +10,54 @@
 //  [out] LPDWORD lpNumberOfFreeClusters,
 //  [out] LPDWORD lpTotalNumberOfClusters
 //);
+
+
+class ProcPtr
+{
+public:
+    explicit ProcPtr(FARPROC ptr) : m_ptr(ptr) {}
+
+    template <typename T>
+    operator T* () const { return reinterpret_cast<T*>(m_ptr); }
+
+private:
+    FARPROC m_ptr;
+};
+
+class DllHelper
+{
+public:
+    ~DllHelper() { FreeLibrary(m_module); }
+
+    ProcPtr operator[](LPCSTR proc_name) const
+    {
+        return ProcPtr(::GetProcAddress(m_module, proc_name));
+    }
+
+private:
+    HMODULE m_module = GetModuleHandle(TEXT("kernel32"));
+};
+
+class genFunc {
+    explicit genFunc(LPCSTR name) : proc_name(name) {}
+
+private:
+    LPCSTR proc_name;
+};
+
+class windows32Help
+{
+public:
+    windows32Help() : m_dll()
+    {
+        newbeep = m_dll["Beep"];
+    }
+
+    decltype(Beep)* newbeep;
+
+private:
+    DllHelper m_dll;
+};
 
 
 using namespace std;
@@ -44,6 +92,9 @@ void print_disk_space(DWORD sectors = 0, DWORD bps = 0, DWORD free_cluster = 0, 
 
 void hook_disk_space() {
     HOOK_TRACE_INFO hHook = { NULL };
+    HMODULE mod = GetModuleHandle(TEXT("kernel32"));
+    FARPROC c = GetProcAddress(GetModuleHandle(TEXT("kernel32")), "GetDiskFreeSpaceA");
+    //std::function<void(DWORD, DWORD, DWORD, DWORD)> fn = c;
 
     // Install the hook
     NTSTATUS result = LhInstallHook(
@@ -67,7 +118,6 @@ void hook_disk_space() {
     DWORD bps = 0;
     DWORD free_cluster = 0;
     DWORD total_cluster = 0;
-
     cout << "Free Disk Space Before\n";
     GetDiskFreeSpaceA("C:/", &sectors, &bps, &free_cluster, &total_cluster);
     print_disk_space(sectors, bps, free_cluster, total_cluster);
@@ -93,6 +143,8 @@ void hook_disk_space() {
 }
 
 void hook_beep() {
+    windows32Help w32;
+
     HOOK_TRACE_INFO hHook = { NULL }; // keep track of our hook
     cout << "\n";
     cout << GetProcAddress(GetModuleHandle(TEXT("kernel32")), "Beep");
@@ -114,7 +166,7 @@ void hook_beep() {
     }
 
     cout << "Beep after hook installed but not enabled.\n";
-    Beep(500, 500);
+    w32.newbeep(500, 500);
 
     cout << "Activating hook for current thread only.\n";
     // If the threadId in the ACL is set to 0, 
@@ -123,13 +175,13 @@ void hook_beep() {
     LhSetInclusiveACL(ACLEntries, 1, &hHook);
 
     cout << "Beep after hook enabled.\n";
-    Beep(500, 500);
+    w32.newbeep(500, 500);
 
     cout << "Uninstall hook\n";
     LhUninstallHook(&hHook);
 
     cout << "Beep after hook uninstalled\n";
-    Beep(500, 500);
+    w32.newbeep(500, 500);
 
     cout << "\n\nRestore ALL entry points of pending removals issued by LhUninstallHook()\n";
     LhWaitForPendingRemovals();
