@@ -38,11 +38,21 @@ private:
     HMODULE m_module = GetModuleHandle(TEXT("kernel32"));
 };
 
+template <class T>
 class genFunc {
-    explicit genFunc(LPCSTR name) : proc_name(name) {}
+
+    genFunc(T originalFunction, LPCSTR proc) {
+        originalFunc = originalFunction;
+        newFunc = [] (T) {
+            return originalFunction;
+        };
+        proc_name = proc;
+    }
 
 private:
     LPCSTR proc_name;
+    T originalFunc;
+    T newFunc;
 };
 
 class windows32Help
@@ -51,9 +61,11 @@ public:
     windows32Help() : m_dll()
     {
         newbeep = m_dll["Beep"];
+        newDA = m_dll["GetDiskFreeSpaceA"];
     }
 
     decltype(Beep)* newbeep;
+    decltype(GetDiskFreeSpaceA)* newDA;
 
 private:
     DllHelper m_dll;
@@ -91,6 +103,7 @@ void print_disk_space(DWORD sectors = 0, DWORD bps = 0, DWORD free_cluster = 0, 
 }
 
 void hook_disk_space() {
+    windows32Help w32;
     HOOK_TRACE_INFO hHook = { NULL };
     HMODULE mod = GetModuleHandle(TEXT("kernel32"));
     FARPROC c = GetProcAddress(GetModuleHandle(TEXT("kernel32")), "GetDiskFreeSpaceA");
@@ -119,7 +132,7 @@ void hook_disk_space() {
     DWORD free_cluster = 0;
     DWORD total_cluster = 0;
     cout << "Free Disk Space Before\n";
-    GetDiskFreeSpaceA("C:/", &sectors, &bps, &free_cluster, &total_cluster);
+    w32.newDA("C:/", &sectors, &bps, &free_cluster, &total_cluster);
     print_disk_space(sectors, bps, free_cluster, total_cluster);
     
     // If the threadId in the ACL is set to 0, 
@@ -128,14 +141,14 @@ void hook_disk_space() {
     LhSetInclusiveACL(ACLEntries, 1, &hHook);
 
     cout << "Free Disk Space After Enabling.\n";
-    GetDiskFreeSpaceA("C:/", &sectors, &bps, &free_cluster, &total_cluster);
+    w32.newDA("C:/", &sectors, &bps, &free_cluster, &total_cluster);
     print_disk_space(sectors, bps, free_cluster, total_cluster);
 
     cout << "Uninstall hook\n";
     LhUninstallHook(&hHook);
 
     cout << "Free Disk Space After Uninstall\n";
-    GetDiskFreeSpaceA("C:/", &sectors, &bps, &free_cluster, &total_cluster);
+    w32.newDA("C:/", &sectors, &bps, &free_cluster, &total_cluster);
     print_disk_space(sectors, bps, free_cluster, total_cluster);
 
     cout << "\n\nRestore ALL entry points of pending removals issued by LhUninstallHook()\n";
@@ -192,7 +205,7 @@ int main()
 {
     //hook_beep();
     hook_disk_space();
-
+    //genFunc<> twst = genFunc();
     cout << "Press any key to exit.";
     cin.get();
 
