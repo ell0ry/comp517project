@@ -58,11 +58,43 @@ FuncComp<U, T...> createGenFunc(U(*origFunc)(T... args), U(*hookFunc)(T... args)
     });
 }
 
-template<typename U, typename... T>
 class HookInstaller
 {
+    HOOK_TRACE_INFO hHook = { NULL };
+
     HookInstaller(void* origFunc, void* hookedFunction) {
-        
+        hHook = { NULL }; // keep track of our hook
+
+        // Install the hook
+        NTSTATUS result = LhInstallHook(
+            origFunc,
+            hookedFunction,
+            NULL,
+            &hHook);
+
+        if (FAILED(result))
+        {
+            wstring s(RtlGetLastErrorString());
+            wcout << "Failed to install hook: ";
+            wcout << s;
+            cout << "\n\nPress any key to exit.";
+            cin.get();
+            return;
+        }
+    }
+
+    enableHookForProccess(ULONG id) {
+        ULONG ACLEntries[1] = { id };
+        LhSetInclusiveACL(ACLEntries, 1, &hHook);
+    }
+
+    enableHookForCurrentProcess() {
+        ULONG ACLEntries[1] = { 0 };
+        LhSetInclusiveACL(ACLEntries, 1, &hHook);
+    }
+
+    uninstallHook() {
+        LhUninstallHook(&hHook);
     }
 
 };
@@ -76,7 +108,6 @@ public:
         _Beep = m_dll["Beep"];
         _DiskFreeSpace = m_dll["GetDiskFreeSpaceA"];
     }
-
 
     decltype(Beep)* _Beep;
     decltype(GetDiskFreeSpaceA)* _DiskFreeSpace;
