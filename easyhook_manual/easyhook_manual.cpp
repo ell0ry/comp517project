@@ -38,8 +38,17 @@ public:
     FuncComp(std::function<U(T...)> composedF) {
         composedFunction = composedF;
     }
+
     std::function<U(T...)> composedFunction;
 };
+
+template<typename U, typename...T>
+FuncComp<U, T...> createGenFunc(U(*origFunc)(T... args), std::function<U(T...)> hookFunc) {
+    return FuncComp<U, T...>([=](T...xs) {
+        hookFunc(xs...);
+        return origFunc(xs...);
+        });
+}
 
 template<typename U, typename...T>
 FuncComp<U, T...> createGenFunc(U(*origFunc)(T... args), U(*hookFunc)(T... args)) {
@@ -48,6 +57,15 @@ FuncComp<U, T...> createGenFunc(U(*origFunc)(T... args), U(*hookFunc)(T... args)
         return origFunc(xs...);
     });
 }
+
+template<typename U, typename... T>
+class HookInstaller
+{
+    HookInstaller(void* origFunc, void* hookedFunction) {
+        
+    }
+
+};
 
 // Helper Class to group and easy access API calls
 class WindowsAPIHelper
