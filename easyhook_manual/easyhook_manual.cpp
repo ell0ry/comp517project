@@ -3,14 +3,6 @@
 #include <Windows.h>
 #include <easyhook.h>
 #include <functional>
-//BOOL GetDiskFreeSpaceA(
-//    [in]  LPCSTR  lpRootPathName,
-//    [out] LPDWORD lpSectorsPerCluster,
-//  [out] LPDWORD lpBytesPerSector,
-//  [out] LPDWORD lpNumberOfFreeClusters,
-//  [out] LPDWORD lpTotalNumberOfClusters
-//);
-
 
 class ProcPtr
 {
@@ -24,6 +16,7 @@ private:
     FARPROC m_ptr;
 };
 
+//Helper to get API adress
 class DllHelper
 {
 public:
@@ -38,34 +31,37 @@ private:
     HMODULE m_module = GetModuleHandle(TEXT("kernel32"));
 };
 
-template <class T>
-class genFunc {
-
-    genFunc(T originalFunction, LPCSTR proc) {
-        originalFunc = originalFunction;
-        newFunc = [] (T) {
-            return originalFunction;
-        };
-        proc_name = proc;
+// Class to compose hooks with their original calls
+template<typename U, typename... T>
+class FuncComp {
+public:
+    FuncComp(std::function<U(T...)> composedF) {
+        composedFunction = composedF;
     }
-
-private:
-    LPCSTR proc_name;
-    T originalFunc;
-    T newFunc;
+    std::function<U(T...)> composedFunction;
 };
 
-class windows32Help
+template<typename U, typename...T>
+FuncComp<U, T...> createGenFunc(U(*origFunc)(T... args), U(*hookFunc)(T... args)) {
+    return FuncComp<U, T...>([=](T...xs) {
+        hookFunc(xs...);
+        return origFunc(xs...);
+    });
+}
+
+// Helper Class to group and easy access API calls
+class WindowsAPIHelper
 {
 public:
-    windows32Help() : m_dll()
+    WindowsAPIHelper() : m_dll()
     {
-        newbeep = m_dll["Beep"];
-        newDA = m_dll["GetDiskFreeSpaceA"];
+        _Beep = m_dll["Beep"];
+        _DiskFreeSpace = m_dll["GetDiskFreeSpaceA"];
     }
 
-    decltype(Beep)* newbeep;
-    decltype(GetDiskFreeSpaceA)* newDA;
+
+    decltype(Beep)* _Beep;
+    decltype(GetDiskFreeSpaceA)* _DiskFreeSpace;
 
 private:
     DllHelper m_dll;
@@ -83,16 +79,19 @@ BOOL WINAPI myBeepHook(DWORD dwFreq, DWORD dwDuration)
     return Beep(dwFreq + 800, dwDuration);
 }
 
-BOOL WINAPI myDiskFreespaceHook(LPCSTR lpRootPathName, LPDWORD lpSectors, LPDWORD lpBytesPerSector, LPDWORD freeCluster, LPDWORD lpTotalClusters)
+BOOL WINAPI coreDiskHook(LPCSTR lpRootPathName, LPDWORD lpSectors, LPDWORD lpBytesPerSector, LPDWORD freeCluster, LPDWORD lpTotalClusters)
 {
     cout << "\n Hooked the disk freespace function! Going to bypass it.";
     *lpSectors = 10;
     *lpBytesPerSector = 10;
     *freeCluster = 10;
     *lpTotalClusters = 10;
-
     return true;
-    
+}
+auto Disk_hook = createGenFunc(GetDiskFreeSpaceA, coreDiskHook).composedFunction;
+BOOL WINAPI myDiskFreespaceHook(LPCSTR lpRootPathName, LPDWORD lpSectors, LPDWORD lpBytesPerSector, LPDWORD freeCluster, LPDWORD lpTotalClusters)
+{
+    return Disk_hook(lpRootPathName, lpSectors, lpBytesPerSector, freeCluster, lpTotalClusters);
 }
 
 void print_disk_space(DWORD sectors = 0, DWORD bps = 0, DWORD free_cluster = 0, DWORD total_cluster = 0) {
@@ -103,11 +102,10 @@ void print_disk_space(DWORD sectors = 0, DWORD bps = 0, DWORD free_cluster = 0, 
 }
 
 void hook_disk_space() {
-    windows32Help w32;
+    WindowsAPIHelper windowsHelper;
     HOOK_TRACE_INFO hHook = { NULL };
     HMODULE mod = GetModuleHandle(TEXT("kernel32"));
     FARPROC c = GetProcAddress(GetModuleHandle(TEXT("kernel32")), "GetDiskFreeSpaceA");
-    //std::function<void(DWORD, DWORD, DWORD, DWORD)> fn = c;
 
     // Install the hook
     NTSTATUS result = LhInstallHook(
@@ -132,7 +130,7 @@ void hook_disk_space() {
     DWORD free_cluster = 0;
     DWORD total_cluster = 0;
     cout << "Free Disk Space Before\n";
-    w32.newDA("C:/", &sectors, &bps, &free_cluster, &total_cluster);
+    windowsHelper._DiskFreeSpace("C:/", &sectors, &bps, &free_cluster, &total_cluster);
     print_disk_space(sectors, bps, free_cluster, total_cluster);
     
     // If the threadId in the ACL is set to 0, 
@@ -141,14 +139,14 @@ void hook_disk_space() {
     LhSetInclusiveACL(ACLEntries, 1, &hHook);
 
     cout << "Free Disk Space After Enabling.\n";
-    w32.newDA("C:/", &sectors, &bps, &free_cluster, &total_cluster);
+    windowsHelper._DiskFreeSpace("C:/", &sectors, &bps, &free_cluster, &total_cluster);
     print_disk_space(sectors, bps, free_cluster, total_cluster);
 
     cout << "Uninstall hook\n";
     LhUninstallHook(&hHook);
 
     cout << "Free Disk Space After Uninstall\n";
-    w32.newDA("C:/", &sectors, &bps, &free_cluster, &total_cluster);
+    windowsHelper._DiskFreeSpace("C:/", &sectors, &bps, &free_cluster, &total_cluster);
     print_disk_space(sectors, bps, free_cluster, total_cluster);
 
     cout << "\n\nRestore ALL entry points of pending removals issued by LhUninstallHook()\n";
@@ -156,7 +154,7 @@ void hook_disk_space() {
 }
 
 void hook_beep() {
-    windows32Help w32;
+    WindowsAPIHelper w32;
 
     HOOK_TRACE_INFO hHook = { NULL }; // keep track of our hook
     cout << "\n";
@@ -179,7 +177,7 @@ void hook_beep() {
     }
 
     cout << "Beep after hook installed but not enabled.\n";
-    w32.newbeep(500, 500);
+    w32._Beep(500, 500);
 
     cout << "Activating hook for current thread only.\n";
     // If the threadId in the ACL is set to 0, 
@@ -188,13 +186,13 @@ void hook_beep() {
     LhSetInclusiveACL(ACLEntries, 1, &hHook);
 
     cout << "Beep after hook enabled.\n";
-    w32.newbeep(500, 500);
+    w32._Beep(500, 500);
 
     cout << "Uninstall hook\n";
     LhUninstallHook(&hHook);
 
     cout << "Beep after hook uninstalled\n";
-    w32.newbeep(500, 500);
+    w32._Beep(500, 500);
 
     cout << "\n\nRestore ALL entry points of pending removals issued by LhUninstallHook()\n";
     LhWaitForPendingRemovals();
