@@ -83,21 +83,35 @@ class HookInstaller
         }
     }
 
-    enableHookForProccess(ULONG id) {
+    void enableHookForProccess(ULONG id) {
         ULONG ACLEntries[1] = { id };
         LhSetInclusiveACL(ACLEntries, 1, &hHook);
     }
 
-    enableHookForCurrentProcess() {
+    void enableHookForCurrentProcess() {
         ULONG ACLEntries[1] = { 0 };
         LhSetInclusiveACL(ACLEntries, 1, &hHook);
     }
 
-    uninstallHook() {
+    void uninstallHook() {
         LhUninstallHook(&hHook);
     }
-
 };
+
+/**
+ * @param origFunc original API function
+ * @param coreHookLamda core logic to be insert before original API call
+ * @param composedFunctionAdd address of function that uses delegates to coreHookLambda
+ * @return HookInstaller 
+ */
+template<typename U, typename...T>
+HookInstaller 
+CreateHookingEnvironment(U(*origFunc)(T... args), std::function<U(T...)>* coreHookLamda, U(*composedFunctionAdd)(T... args)) {
+    FuncComp<U, T...> composedHook = createGenFunc(origFunc, *coreHookLamda);
+    coreHookLamda* = composedHook.composedFunction; // compose hook to contain original function call
+    HookInstaller hInstall = HookInstaller(origFunc, composedFunctionAdd);// install hook
+    return hInstall;
+}
 
 // Helper Class to group and easy access API calls
 class WindowsAPIHelper
