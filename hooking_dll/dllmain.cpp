@@ -98,13 +98,6 @@ FuncComp<U, T...> createGenFunc(U(*origFunc)(T... args), std::function<void(T...
         });
 }
 
-//template<typename U, typename...T>
-//FuncComp<U, T...> createGenFunc(U(*origFunc)(T... args), void(*hookFunc)(T... args)) {
-//    return FuncComp<U, T...>([=](T...xs) {
-//        hookFunc(xs...);
-//        return origFunc(xs...);
-//        });
-//}
 
 class HookInstaller
 {
@@ -131,10 +124,6 @@ public:
             wcout << "HookInstaller: Installed the hook successfully" << endl;
         }
     }
-    //void enableHookForProccess(ULONG id) {
-    //    ULONG ACLEntries[1] = { id };
-    //    LhSetInclusiveACL(ACLEntries, 1, &hHook);
-    //}
 
     void enableHookForCurrentProcess() {
         wcout << "HookInstaller.enableHookForCurrentProcess: Installed the hook successfully" << endl;
@@ -175,7 +164,6 @@ public:
     {
         _Beep = m_dll["Beep"];
         _DiskFreeSpace = m_dll["GetDiskFreeSpaceA"];
-
         _CreateFile = m_dll["CreateFileW"];
         _CreateFileMapping = m_dll["CreateFileMapping"];
         _CreateProcess = m_dll["CreateProcess"];
@@ -251,7 +239,6 @@ void __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_INFO* inRemoteInfo)
 		"              jjjj                                         \n\n";
 
 	std::cout << "Injected by process Id: " << inRemoteInfo->HostPID << "\n";
-	HookProcess(); // Unclear what the parameter here corresponds to.
-
+	HookProcess(); 
 	return;
 }
