@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31729.503
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31825.309
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "easyhook_manual", "easyhook_manual\easyhook_manual.vcxproj", "{92154611-4B8A-4B7D-AF7F-B09DD71446D7}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hooking_dll", "hooking_dll\hooking_dll.vcxproj", "{D13499CA-EDBD-4577-9C78-091601175D6D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,14 @@ Global
 		{92154611-4B8A-4B7D-AF7F-B09DD71446D7}.Release|x64.Build.0 = Release|x64
 		{92154611-4B8A-4B7D-AF7F-B09DD71446D7}.Release|x86.ActiveCfg = Release|Win32
 		{92154611-4B8A-4B7D-AF7F-B09DD71446D7}.Release|x86.Build.0 = Release|Win32
+		{D13499CA-EDBD-4577-9C78-091601175D6D}.Debug|x64.ActiveCfg = Debug|x64
+		{D13499CA-EDBD-4577-9C78-091601175D6D}.Debug|x64.Build.0 = Debug|x64
+		{D13499CA-EDBD-4577-9C78-091601175D6D}.Debug|x86.ActiveCfg = Debug|Win32
+		{D13499CA-EDBD-4577-9C78-091601175D6D}.Debug|x86.Build.0 = Debug|Win32
+		{D13499CA-EDBD-4577-9C78-091601175D6D}.Release|x64.ActiveCfg = Release|x64
+		{D13499CA-EDBD-4577-9C78-091601175D6D}.Release|x64.Build.0 = Release|x64
+		{D13499CA-EDBD-4577-9C78-091601175D6D}.Release|x86.ActiveCfg = Release|Win32
+		{D13499CA-EDBD-4577-9C78-091601175D6D}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
