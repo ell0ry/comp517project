@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros">
+    <EASYHOOK_DLL_PATH>$(SolutionDir)EasyHook-2.7.6789.0-Binaries\projects\easyhook\Deploy\NetFX3.5</EASYHOOK_DLL_PATH>
+    <EASYHOOK_LIB_NAME>easyhook64.lib</EASYHOOK_LIB_NAME>
+    <BUILD_EVENT_COPY_EASYHOOK_DLL_TO_BUILD_DIR>xcopy /y /d "$(EASYHOOK_DLL_PATH)\EasyHook64.dll" "$(OutDir)"</BUILD_EVENT_COPY_EASYHOOK_DLL_TO_BUILD_DIR>
+  </PropertyGroup>
+  <PropertyGroup>
+    <IncludePath>$(EASYHOOK_DLL_PATH);$(IncludePath)</IncludePath>
+    <LibraryPath>$(EASYHOOK_DLL_PATH);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(EASYHOOK_DLL_PATH);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>$(EASYHOOK_LIB_NAME);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(EASYHOOK_DLL_PATH);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>$(BUILD_EVENT_COPY_EASYHOOK_DLL_TO_BUILD_DIR)</Command>
+      <Message>Copy easyhook dll to build directory.</Message>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <BuildMacro Include="EASYHOOK_DLL_PATH">
+      <Value>$(EASYHOOK_DLL_PATH)</Value>
+    </BuildMacro>
+    <BuildMacro Include="EASYHOOK_LIB_NAME">
+      <Value>$(EASYHOOK_LIB_NAME)</Value>
+    </BuildMacro>
+    <BuildMacro Include="BUILD_EVENT_COPY_EASYHOOK_DLL_TO_BUILD_DIR">
+      <Value>$(BUILD_EVENT_COPY_EASYHOOK_DLL_TO_BUILD_DIR)</Value>
+    </BuildMacro>
+  </ItemGroup>
+</Project>
