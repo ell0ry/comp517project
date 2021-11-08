@@ -9,12 +9,19 @@
 #include <functional>
 #include <Wincrypt.h>
 #include <winsock2.h>
+#include <psapi.h>
+#include <format>
+#include <fstream>
 
 using namespace std;
 
 // EasyHook will be looking for this export to support DLL injection. If not found then 
 // DLL injection will fail.
 extern "C" void __declspec(dllexport) __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_INFO * inRemoteInfo);
+void InitializeTracing();
+
+// Global tracing stream
+ofstream tracingStream;
 
 
 // Hook Defs
@@ -227,6 +234,21 @@ void HookProcess() {
 	// LhWaitForPendingRemovals();
 }
 
+/* Sets up tracing to FS for the process.*/
+void InitializeTracing() {
+	CHAR processFileName[128];
+	GetModuleFileNameA(NULL, processFileName, 128);
+
+	SYSTEMTIME currentTime;
+	GetSystemTime(&currentTime);
+
+	CHAR fullTraceName[256];
+	sprintf_s(fullTraceName, "%s_%d_%d_%d_%d%d.hook", processFileName, currentTime.wMonth, currentTime.wDay, currentTime.wYear, currentTime.wHour, currentTime.wMinute);
+
+	tracingStream.open(fullTraceName);
+	tracingStream << "Test";
+}
+
 
 void __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_INFO* inRemoteInfo)
 {
@@ -240,5 +262,6 @@ void __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_INFO* inRemoteInfo)
 
 	std::cout << "Injected by process Id: " << inRemoteInfo->HostPID << "\n";
 	HookProcess();
+	InitializeTracing();
 	return;
 }
