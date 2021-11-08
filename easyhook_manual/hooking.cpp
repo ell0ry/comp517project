@@ -7,6 +7,7 @@
 
 
 using namespace std;
+
 // Hook Defs
 void WINAPI myDiskFreespaceHook(LPCSTR lpRootPathName, LPDWORD lpSectors, LPDWORD lpBytesPerSector, LPDWORD freeCluster, LPDWORD lpTotalClusters);
 std::function<void(LPCSTR, LPDWORD, LPDWORD, LPDWORD, LPDWORD)> Disk_hook = 
@@ -197,45 +198,11 @@ list<HookInstaller> CreateHooks() {
     WindowsAPIHelper windowsHelper;
 
     //add specific hooks
-    //hookList.push_back(CreateHookingEnvironment(windowsHelper._DiskFreeSpace, myDiskFreespaceHook, &Disk_hook));
     hookList.push_back(CreateHookingEnvironment(windowsHelper._CreateFile, myCreateFileW, &create_file));
-    //hookList.push_back(CreateHookingEnvironment("sds", myDiskFreespaceHook, &Disk_hook));
     return hookList;
 }
 // ======================================================  Hooking Helper Classes ============================================== //
 
-
-
-void disk_space() {
-
-    DWORD sectors = 0;
-    DWORD bps = 0;
-    DWORD free_cluster = 0;
-    DWORD total_cluster = 0;
-    GetDiskFreeSpaceA("C:/", &sectors, &bps, &free_cluster, &total_cluster);
-}
-
-
-void simple_disk_hooking_example() {
-    cout << "Calling Free Disk Space Before\n";
-    disk_space();
-
-    list<HookInstaller> hooks = CreateHooks();
-    for (HookInstaller hk : hooks) {
-        hk.enableHookForCurrentProcess();
-    }
-    cout << "Calling Free Disk Space After hook install\n";
-    disk_space();
-    CreateFileW(NULL, 0, 0, NULL, 0, 0, nullptr);
-
-    for (HookInstaller hk : hooks) {
-        hk.uninstallHook();
-    }
-    cout << "Calling Free Disk Space After hook remove\n";
-    disk_space();
-    cout << "\n\nRestore ALL entry points of pending removals issued by LhUninstallHook()\n";
-    LhWaitForPendingRemovals();
-}
 
 void HookProcess(DWORD processToHook) {
     cout << "hooking into " << processToHook << "\n";
@@ -243,6 +210,7 @@ void HookProcess(DWORD processToHook) {
     for (HookInstaller hook : hookEnv) {
         hook.enableHookForProccess(processToHook);
     }
+
     cout << "Press enter to unhook and exit\n";
     cin.ignore();
     cin.get();
@@ -260,6 +228,34 @@ int main()
     cout << "Enter pid of application to hook:\n";
     cin >> line;
     DWORD pidOfInterest = atol(line);
-    HookProcess(pidOfInterest);
+    // HookProcess(pidOfInterest);
+
+    WCHAR dllName[] = L"hooking_dll.dll";
+
+    NTSTATUS nt = RhInjectLibrary(
+        pidOfInterest,
+        0,
+        EASYHOOK_INJECT_DEFAULT,
+        NULL,
+        dllName,
+        NULL,
+        0
+    );
+
+    if (nt != 0)
+    {
+        printf("RhInjectLibrary failed with error code = %d\n", nt);
+        PWCHAR err = RtlGetLastErrorString();
+        std::wcout << err << "\n";
+    }
+    else
+    {
+        std::wcout << L"Library injected successfully.\n";
+    }
+
+    std::wcout << "Press Enter to exit";
+    std::wstring input;
+    std::getline(std::wcin, input);
+    std::getline(std::wcin, input);
     return 0;
 }
