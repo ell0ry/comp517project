@@ -222,7 +222,7 @@ list<HookInstaller> CreateHooks() {
 // ======================================================  Hooking Helper Classes ============================================== //
 
 void HookProcess() {
-    cout << "hooking into current process:  " << processToHook << "\n";
+    cout << "hooking into current process:  " << GetCurrentProcessId() << "\n";
     list<HookInstaller> hookEnv = CreateHooks();
     for (HookInstaller hook : hookEnv) {
         // hook.enableHookForProccess(processToHook);
