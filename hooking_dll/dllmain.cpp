@@ -32,8 +32,9 @@ std::function<void(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode,
 create_file = []
 (LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
 ->void {
-    std::cout << "\n Hooked the createfile function for function\n";
+    std::cout << "\n Create_File Lambda: Hooked the createfile function for function\n";
 };
+
 void
 WINAPI
 myCreateFileW(
@@ -97,13 +98,13 @@ FuncComp<U, T...> createGenFunc(U(*origFunc)(T... args), std::function<void(T...
         });
 }
 
-template<typename U, typename...T>
-FuncComp<U, T...> createGenFunc(U(*origFunc)(T... args), void(*hookFunc)(T... args)) {
-    return FuncComp<U, T...>([=](T...xs) {
-        hookFunc(xs...);
-        return origFunc(xs...);
-        });
-}
+//template<typename U, typename...T>
+//FuncComp<U, T...> createGenFunc(U(*origFunc)(T... args), void(*hookFunc)(T... args)) {
+//    return FuncComp<U, T...>([=](T...xs) {
+//        hookFunc(xs...);
+//        return origFunc(xs...);
+//        });
+//}
 
 class HookInstaller
 {
@@ -123,8 +124,11 @@ public:
         if (FAILED(result))
         {
             wstring s(RtlGetLastErrorString());
-            wcout << "Failed to install hook: ";
+            wcout << "HookInstaller: Failed to install hook: ";
             wcout << s;
+        }
+        else {
+            wcout << "HookInstaller: Installed the hook successfully";
         }
     }
     void enableHookForProccess(ULONG id) {
@@ -153,6 +157,7 @@ private:
 template<typename U, typename...T>
 HookInstaller
 CreateHookingEnvironment(U(*origFunc)(T... args), void(*composedFunctionAdd)(T... args), std::function<void(T...)>* coreHookLamda) {
+    cout << "CreateHookingEnvironment: entered." << endl;
     FuncComp<U, T...> composedHook = createGenFunc(origFunc, *coreHookLamda);
     *coreHookLamda = composedHook.composedFunction; // compose hook to contain original function call
     HookInstaller hInstall = HookInstaller(origFunc, composedFunctionAdd);// install hook
@@ -217,17 +222,18 @@ void HookProcess(DWORD processToHook) {
     cout << "hooking into " << processToHook << "\n";
     list<HookInstaller> hookEnv = CreateHooks();
     for (HookInstaller hook : hookEnv) {
-        hook.enableHookForProccess(processToHook);
+        // hook.enableHookForProccess(processToHook);
+        hook.enableHookForCurrentProcess();
     }
 
-    cout << "Press enter to unhook and exit\n";
-    cin.ignore();
-    cin.get();
-    for (HookInstaller hook : hookEnv) {
-        hook.uninstallHook();
-    }
-    cout << "\n\nRestore ALL entry points of pending removals issued by LhUninstallHook()\n";
-    LhWaitForPendingRemovals();
+    // cout << "Press enter to unhook and exit\n";
+    // cin.ignore();
+    // cin.get();
+    // for (HookInstaller hook : hookEnv) {
+    //    hook.uninstallHook();
+    // }
+    // cout << "\n\nRestore ALL entry points of pending removals issued by LhUninstallHook()\n";
+    // LhWaitForPendingRemovals();
 }
 
 
