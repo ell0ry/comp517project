@@ -125,20 +125,23 @@ public:
         {
             wstring s(RtlGetLastErrorString());
             wcout << "HookInstaller: Failed to install hook: ";
-            wcout << s;
+            wcout << s << endl;
         }
         else {
-            wcout << "HookInstaller: Installed the hook successfully";
+            wcout << "HookInstaller: Installed the hook successfully" << endl;
         }
     }
-    void enableHookForProccess(ULONG id) {
-        ULONG ACLEntries[1] = { id };
-        LhSetInclusiveACL(ACLEntries, 1, &hHook);
-    }
+    //void enableHookForProccess(ULONG id) {
+    //    ULONG ACLEntries[1] = { id };
+    //    LhSetInclusiveACL(ACLEntries, 1, &hHook);
+    //}
 
     void enableHookForCurrentProcess() {
-        ULONG ACLEntries[1] = { 0 };
-        LhSetInclusiveACL(ACLEntries, 1, &hHook);
+        wcout << "HookInstaller.enableHookForCurrentProcess: Installed the hook successfully" << endl;
+        wcout << "HookInstaller.enableHookForCurrentProcess: Current thread is: " << GetCurrentThreadId() << endl;
+         ULONG ACLEntries[1] = { 0 };
+         LhSetExclusiveACL(ACLEntries, 1, &hHook);
+
     }
 
     void uninstallHook() {
@@ -218,8 +221,8 @@ list<HookInstaller> CreateHooks() {
 
 // ======================================================  Hooking Helper Classes ============================================== //
 
-void HookProcess(DWORD processToHook) {
-    cout << "hooking into " << processToHook << "\n";
+void HookProcess() {
+    cout << "hooking into current process:  " << processToHook << "\n";
     list<HookInstaller> hookEnv = CreateHooks();
     for (HookInstaller hook : hookEnv) {
         // hook.enableHookForProccess(processToHook);
@@ -248,47 +251,7 @@ void __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_INFO* inRemoteInfo)
 		"              jjjj                                         \n\n";
 
 	std::cout << "Injected by process Id: " << inRemoteInfo->HostPID << "\n";
-	/*
-	std::cout << "Passed in data size: " << inRemoteInfo->UserDataSize << "\n";
-	if (inRemoteInfo->UserDataSize == sizeof(DWORD))
-	{
-		gFreqOffset = *reinterpret_cast<DWORD*>(inRemoteInfo->UserData);
-		std::cout << "Adjusting Beep frequency by: " << gFreqOffset << "\n";
-	}
-
-	// Perform hooking
-	HOOK_TRACE_INFO hHook = { NULL }; // keep track of our hook
-
-	std::cout << "\n";
-	std::cout << "Win32 Beep found at address: " << GetProcAddress(GetModuleHandle(TEXT("kernel32")), "Beep") << "\n";
-
-	// Install the hook
-	NTSTATUS result = LhInstallHook(
-		GetProcAddress(GetModuleHandle(TEXT("kernel32")), "Beep"),
-		myBeepHook,
-		NULL,
-		&hHook);
-	if (FAILED(result))
-	{
-		std::wstring s(RtlGetLastErrorString());
-		std::wcout << "Failed to install hook: ";
-		std::wcout << s;
-	}
-	else
-	{
-		std::cout << "Hook 'myBeepHook installed successfully.";
-	}
-
-	// If the threadId in the ACL is set to 0,
-	// then internally EasyHook uses GetCurrentThreadId()
-	ULONG ACLEntries[1] = { 0 };
-
-	// Disable the hook for the provided threadIds, enable for all others
-	LhSetExclusiveACL(ACLEntries, 1, &hHook);
-	*/
-
-
-	HookProcess(0); // Unclear what the parameter here corresponds to.
+	HookProcess(); // Unclear what the parameter here corresponds to.
 
 	return;
 }
