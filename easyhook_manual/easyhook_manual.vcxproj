@@ -155,7 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="easyhook_manual.cpp" />
+    <ClCompile Include="hooking.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -15,7 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="easyhook_manual.cpp">
+    <ClCompile Include="hooking.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
