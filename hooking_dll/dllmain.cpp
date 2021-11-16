@@ -23,6 +23,9 @@ void InitializeTracing();
 // Global tracing stream
 ofstream tracingStream;
 
+// Path to the wendokernel trace directory
+CHAR wendokernel_trace_path[256];
+
 
 // Hook Defs
 void WINAPI myDiskFreespaceHook(LPCSTR lpRootPathName, LPDWORD lpSectors, LPDWORD lpBytesPerSector, LPDWORD freeCluster, LPDWORD lpTotalClusters);
@@ -234,6 +237,45 @@ void HookProcess() {
 	// LhWaitForPendingRemovals();
 }
 
+/* Checks for the presence of an established tracing directory on the host. If none exists, create it.
+	Returns 0 on success, 1 on failure.
+*/
+int EstablishTracingDirectory() {
+	// Construct the proper directory path to place traces in: C:\Users\{username}\Wendokernel_Traces
+	// %UserProfile%
+	CHAR user_profile_path[128];
+	size_t getEnvReturnValue;
+	getenv_s(&getEnvReturnValue, user_profile_path, 128, "UserProfile");
+
+	if (getEnvReturnValue == 0) {
+		// Environment Variable Not Found.
+		return 1;
+	}
+
+	sprintf_s(wendokernel_trace_path, "%s\Wendokernel_Traces", user_profile_path);
+	cout << "Full wendokernel trace directory: " << wendokernel_trace_path;
+
+	// Check if it exists. If not, create it.
+	DWORD fileAttr = GetFileAttributesA(wendokernel_trace_path);
+	if (fileAttr == INVALID_FILE_ATTRIBUTES) {
+		// Something wrong with path format.
+		return 1;
+	}
+
+	if (fileAttr & FILE_ATTRIBUTE_DIRECTORY) {
+		// Directory already exists
+		return 0;
+	}
+	else {
+		// Directory does not exist. Attempt creating it.
+		if (CreateDirectoryA(wendokernel_trace_path, NULL) == 0) {
+			// Directory creation failed.
+			return 1;
+		}
+	}
+
+}
+
 /* Sets up tracing to FS for the process.*/
 void InitializeTracing() {
 	CHAR processFileName[128];
@@ -261,7 +303,10 @@ void __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_INFO* inRemoteInfo)
 		"              jjjj                                         \n\n";
 
 	std::cout << "Injected by process Id: " << inRemoteInfo->HostPID << "\n";
-	HookProcess();
+	if (EstablishTracingDirectory() == 0) {
+		std::cout << "Failed to establish location of tracing directory.";
+	}
 	InitializeTracing();
+	HookProcess();
 	return;
 }
