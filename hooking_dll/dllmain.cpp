@@ -9,12 +9,23 @@
 #include <functional>
 #include <Wincrypt.h>
 #include <winsock2.h>
+#include <psapi.h>
+#include <shlwapi.h>
+#include <format>
+#include <fstream>
 
 using namespace std;
 
 // EasyHook will be looking for this export to support DLL injection. If not found then 
 // DLL injection will fail.
 extern "C" void __declspec(dllexport) __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_INFO * inRemoteInfo);
+void InitializeTracing();
+
+// Global tracing stream
+ofstream tracingStream;
+
+// Path to the wendokernel trace directory
+CHAR wendokernel_trace_path[256];
 
 
 // Hook Defs
@@ -227,6 +238,80 @@ void HookProcess() {
 	// LhWaitForPendingRemovals();
 }
 
+/* Checks for the presence of an established tracing directory on the host. If none exists, create it.
+	Returns 0 on success, 1 on failure.
+*/
+int EstablishTracingDirectory() {
+	// Construct the proper directory path to place traces in: C:\Users\{username}\Wendokernel_Traces
+	// %UserProfile%
+	CHAR user_profile_path[128];
+	size_t getEnvReturnValue;
+	getenv_s(&getEnvReturnValue, user_profile_path, 128, "UserProfile");
+
+	if (getEnvReturnValue == 0) {
+		// Environment Variable Not Found.
+		return 1;
+	}
+
+	sprintf_s(wendokernel_trace_path, "%s\\Wendokernel_Traces", user_profile_path);
+	cout << "Full wendokernel trace directory: " << wendokernel_trace_path << endl;
+
+	// Check if it exists. If not, create it.
+	DWORD fileAttr = GetFileAttributesA(wendokernel_trace_path);
+	if (fileAttr == INVALID_FILE_ATTRIBUTES) {
+
+		DWORD errorCause = GetLastError();
+		if (errorCause == ERROR_PATH_NOT_FOUND || errorCause == ERROR_FILE_NOT_FOUND || errorCause == ERROR_INVALID_NAME || errorCause == ERROR_BAD_NETPATH) {
+			// Directory needs to be created.
+			if (CreateDirectoryA(wendokernel_trace_path, NULL) == 0) {
+				// Directory creation failed.
+				cerr << "Directory creation failed." << endl;
+				return 1;
+			}
+			else {
+				cout << "Directory creation success." << endl;
+				return 0;
+			}
+		}
+		else {
+			// Some other error occured
+			cerr << "Invalid file attributes. Path is malformed." << endl;
+			return 1;
+		}
+	}
+
+	if (fileAttr & FILE_ATTRIBUTE_DIRECTORY) {
+		// Directory already exists
+		cout << "Tracing directory already exists." << endl;
+		return 0;
+	}
+	else {
+		// File exists, but it isn't a directory.
+		cerr << "File found at path, but it isn't a directory." << endl;
+		return 1;
+	}
+
+}
+
+/* Sets up tracing to FS for the process.*/
+void InitializeTracing() {
+	CHAR fullProcessFileName[128];
+	CHAR *processFileName;
+
+	GetModuleFileNameA(NULL, fullProcessFileName, 128);
+	processFileName = PathFindFileNameA(fullProcessFileName);
+
+	SYSTEMTIME currentTime;
+	GetSystemTime(&currentTime);
+
+	CHAR fullTraceName[512];
+	sprintf_s(fullTraceName, "%s\\%s_%d_%d_%d_%d%d.hook", wendokernel_trace_path, processFileName, currentTime.wMonth, currentTime.wDay, currentTime.wYear, currentTime.wHour, currentTime.wMinute);
+
+	cout << "Full file trace path: " << fullTraceName << endl;
+	tracingStream.open(fullTraceName);
+	tracingStream << "Test";
+}
+
 
 void __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_INFO* inRemoteInfo)
 {
@@ -239,6 +324,10 @@ void __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_INFO* inRemoteInfo)
 		"              jjjj                                         \n\n";
 
 	std::cout << "Injected by process Id: " << inRemoteInfo->HostPID << "\n";
+	if (EstablishTracingDirectory()) {
+		std::cout << "Failed to establish location of tracing directory.";
+	}
+	InitializeTracing();
 	HookProcess();
 	return;
 }
