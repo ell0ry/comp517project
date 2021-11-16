@@ -10,6 +10,7 @@
 #include <Wincrypt.h>
 #include <winsock2.h>
 #include <psapi.h>
+#include <shlwapi.h>
 #include <format>
 #include <fstream>
 
@@ -294,8 +295,11 @@ int EstablishTracingDirectory() {
 
 /* Sets up tracing to FS for the process.*/
 void InitializeTracing() {
-	CHAR processFileName[128];
-	GetModuleFileNameA(NULL, processFileName, 128);
+	CHAR fullProcessFileName[128];
+	CHAR *processFileName;
+
+	GetModuleFileNameA(NULL, fullProcessFileName, 128);
+	processFileName = PathFindFileNameA(fullProcessFileName);
 
 	SYSTEMTIME currentTime;
 	GetSystemTime(&currentTime);
