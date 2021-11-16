@@ -252,26 +252,42 @@ int EstablishTracingDirectory() {
 		return 1;
 	}
 
-	sprintf_s(wendokernel_trace_path, "%s\Wendokernel_Traces", user_profile_path);
-	cout << "Full wendokernel trace directory: " << wendokernel_trace_path;
+	sprintf_s(wendokernel_trace_path, "%s\\Wendokernel_Traces", user_profile_path);
+	cout << "Full wendokernel trace directory: " << wendokernel_trace_path << endl;
 
 	// Check if it exists. If not, create it.
 	DWORD fileAttr = GetFileAttributesA(wendokernel_trace_path);
 	if (fileAttr == INVALID_FILE_ATTRIBUTES) {
-		// Something wrong with path format.
-		return 1;
+
+		DWORD errorCause = GetLastError();
+		if (errorCause == ERROR_PATH_NOT_FOUND || errorCause == ERROR_FILE_NOT_FOUND || errorCause == ERROR_INVALID_NAME || errorCause == ERROR_BAD_NETPATH) {
+			// Directory needs to be created.
+			if (CreateDirectoryA(wendokernel_trace_path, NULL) == 0) {
+				// Directory creation failed.
+				cerr << "Directory creation failed." << endl;
+				return 1;
+			}
+			else {
+				cout << "Directory creation success." << endl;
+				return 0;
+			}
+		}
+		else {
+			// Some other error occured
+			cerr << "Invalid file attributes. Path is malformed." << endl;
+			return 1;
+		}
 	}
 
 	if (fileAttr & FILE_ATTRIBUTE_DIRECTORY) {
 		// Directory already exists
+		cout << "Tracing directory already exists." << endl;
 		return 0;
 	}
 	else {
-		// Directory does not exist. Attempt creating it.
-		if (CreateDirectoryA(wendokernel_trace_path, NULL) == 0) {
-			// Directory creation failed.
-			return 1;
-		}
+		// File exists, but it isn't a directory.
+		cerr << "File found at path, but it isn't a directory." << endl;
+		return 1;
 	}
 
 }
@@ -284,9 +300,10 @@ void InitializeTracing() {
 	SYSTEMTIME currentTime;
 	GetSystemTime(&currentTime);
 
-	CHAR fullTraceName[256];
-	sprintf_s(fullTraceName, "%s_%d_%d_%d_%d%d.hook", processFileName, currentTime.wMonth, currentTime.wDay, currentTime.wYear, currentTime.wHour, currentTime.wMinute);
+	CHAR fullTraceName[512];
+	sprintf_s(fullTraceName, "%s\\%s_%d_%d_%d_%d%d.hook", wendokernel_trace_path, processFileName, currentTime.wMonth, currentTime.wDay, currentTime.wYear, currentTime.wHour, currentTime.wMinute);
 
+	cout << "Full file trace path: " << fullTraceName << endl;
 	tracingStream.open(fullTraceName);
 	tracingStream << "Test";
 }
@@ -303,7 +320,7 @@ void __stdcall NativeInjectionEntryPoint(REMOTE_ENTRY_INFO* inRemoteInfo)
 		"              jjjj                                         \n\n";
 
 	std::cout << "Injected by process Id: " << inRemoteInfo->HostPID << "\n";
-	if (EstablishTracingDirectory() == 0) {
+	if (EstablishTracingDirectory()) {
 		std::cout << "Failed to establish location of tracing directory.";
 	}
 	InitializeTracing();
