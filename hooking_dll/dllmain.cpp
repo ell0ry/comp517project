@@ -64,9 +64,9 @@ myCreateFileW(
 	create_file(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 }
 
-std::function<void(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName)>
-create_file_mapping = [](HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName) -> void {
-	cout << "\n Hooked the create file mapping function.\n";
+std::function<void(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCWSTR lpName)>
+create_file_mapping_w = [](HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCWSTR lpName) -> void {
+	tracingStream << "CreateFileMappingW" << endl;
 };
 
 void
@@ -77,10 +77,10 @@ myCreateFileMapping(
 	_In_ DWORD flProtect,
 	_In_ DWORD dwMaximumSizeHigh,
 	_In_ DWORD dwMaximumSizeLow,
-	_In_opt_ LPCSTR lpName
+	_In_opt_ LPCWSTR lpName
 
 ) {
-	create_file_mapping(hFile, lpFileMappingAttributes, flProtect, dwMaximumSizeHigh, dwMaximumSizeLow, lpName);
+	create_file_mapping_w(hFile, lpFileMappingAttributes, flProtect, dwMaximumSizeHigh, dwMaximumSizeLow, lpName);
 }
 
 
@@ -238,6 +238,7 @@ list<HookInstaller> CreateHooks() {
 
 	//add specific hooks
 	hookList.push_back(CreateHookingEnvironment(windowsHelper._CreateFile, myCreateFileW, &create_file));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._CreateFileMapping, myCreateFileMapping, &create_file_mapping_w));
 	return hookList;
 }
 
