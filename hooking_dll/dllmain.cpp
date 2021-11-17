@@ -44,10 +44,11 @@ create_file = []
 (LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
 ->void {
 	std::cout << "\n Create_File Lambda: Hooked the createfile function for function\n";
-	cout << "Current thread id is: " << GetCurrentThreadId() << endl;
-	tracingStream << "Create_File, " << "lpFileName: " << lpFileName <<
-		", dwDesiredAccess: " << dwDesiredAccess <<
-		", lpSecurityAttributes: " << lpSecurityAttributes << endl;
+	// cout << "Current thread id is: " << GetCurrentThreadId() << endl;
+	// tracingStream << "CreateFileW, " << "lpFileName: " << lpFileName <<
+	//	", dwDesiredAccess: " << dwDesiredAccess <<
+	//	", lpSecurityAttributes: " << lpSecurityAttributes << endl;
+	tracingStream << "CreateFileW" << endl;
 };
 
 void
