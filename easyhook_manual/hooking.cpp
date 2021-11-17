@@ -12,38 +12,39 @@ using namespace std;
 /* Simple console application that hooks our IDS DLL into an arbitrary process. */
 int main()
 {
-    char line[15];
-    cout << "Enter pid of application to hook:\n";
-    cin >> line;
-    DWORD pidOfInterest = atol(line);
-    // HookProcess(pidOfInterest);
+    while (1) {
+        char line[15];
+        cout << "Enter pid of application to hook, or ctrl-c to exit:\n";
+        cin >> line;
+        if (line[0] == '\0') {
+            return 0;
+        }
+        cout << (int) line[0] << endl;
 
-    WCHAR dllName[] = L"hooking_dll.dll";
+        DWORD pidOfInterest = atol(line);
+        // HookProcess(pidOfInterest);
 
-    NTSTATUS nt = RhInjectLibrary(
-        pidOfInterest,
-        0,
-        EASYHOOK_INJECT_DEFAULT,
-        NULL,
-        dllName,
-        NULL,
-        0
-    );
+        WCHAR dllName[] = L"hooking_dll.dll";
 
-    if (nt != 0)
-    {
-        printf("RhInjectLibrary failed with error code = %d\n", nt);
-        PWCHAR err = RtlGetLastErrorString();
-        std::wcout << err << "\n";
+        NTSTATUS nt = RhInjectLibrary(
+            pidOfInterest,
+            0,
+            EASYHOOK_INJECT_DEFAULT,
+            NULL,
+            dllName,
+            NULL,
+            0
+        );
+
+        if (nt != 0)
+        {
+            printf("RhInjectLibrary failed with error code = %d\n", nt);
+            PWCHAR err = RtlGetLastErrorString();
+            std::wcout << err << "\n";
+        }
+        else
+        {
+            std::wcout << L"Library injected successfully.\n";
+        }
     }
-    else
-    {
-        std::wcout << L"Library injected successfully.\n";
-    }
-
-    std::wcout << "Press Enter to exit";
-    std::wstring input;
-    std::getline(std::wcin, input);
-    std::getline(std::wcin, input);
-    return 0;
 }
