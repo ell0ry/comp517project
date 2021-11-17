@@ -98,11 +98,6 @@ myCreateProcessW(_In_opt_ LPCWSTR lpApplicationName, _Inout_opt_ LPWSTR lpComman
 }
 
 
-
-
-
-
-
 // ======================================================  Hooking Helper Classes ============================================== //
 class ProcPtr
 {
