@@ -97,6 +97,42 @@ myCreateProcessW(_In_opt_ LPCWSTR lpApplicationName, _Inout_opt_ LPWSTR lpComman
 	create_process_w(lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes, bInheritHandles, dwCreationFlags, lpEnvironment, lpCurrentDirectory, lpStartupInfo, lpProcessInformation);
 }
 
+std::function<void(PCWSTR NewDirectory)>
+add_dll_directory = [](PCWSTR NewDirectory) {
+	tracingStream << "AddDllDirectory" << endl;
+};
+
+void
+WINAPI
+hookAddDllDirectory(_In_ PCWSTR NewDirectory) {
+	add_dll_directory(NewDirectory);
+}
+
+
+std::function<void(HMODULE hLibModule)>
+disable_thread_library_calls = [](HMODULE hLibModule) {
+	tracingStream << "DisableThreadLibraryCalls" << endl;
+};
+
+void
+WINAPI
+hookDisableThreadLibraryCalls(_In_ HMODULE hLibModule) {
+	disable_thread_library_calls(hLibModule);
+}
+
+
+std::function<void(HMODULE hLibModule)>
+free_library = [](HMODULE hLibModule) {
+	tracingStream << "FreeLibrary" << endl;
+};
+
+void
+WINAPI
+hookFreeLibrary(_In_ HMODULE hLibModule) {
+	free_library(hLibModule);
+}
+
+
 
 // ======================================================  Hooking Helper Classes ============================================== //
 class ProcPtr
@@ -222,6 +258,10 @@ public:
 		_GetThreadContext = m_dll["GetThreadContext"];
 		_GetTickCount = m_dll["GetTickCount"];
 		_GetWindowsDirectory = m_dll["GetWindowsDirectory"];
+
+		_AddDllDirectory = m_dll["AddDllDirectory"];
+		_DisableThreadLibraryCalls = m_dll["DisableThreadLibraryCalls"];
+		_FreeLibrary = m_dll["FreeLibrary"];
 	}
 
 	decltype(Beep)* _Beep;
@@ -240,6 +280,11 @@ public:
 	decltype(GetTickCount)* _GetTickCount;
 	decltype(GetWindowsDirectory)* _GetWindowsDirectory;
 
+	decltype(AddDllDirectory)* _AddDllDirectory;
+	decltype(DisableThreadLibraryCalls)* _DisableThreadLibraryCalls;
+	decltype(FreeLibrary)* _FreeLibrary;
+
+
 private:
 	DllHelper m_dll;
 };
@@ -253,6 +298,10 @@ list<HookInstaller> CreateHooks() {
 	hookList.push_back(CreateHookingEnvironment(windowsHelper._CreateFile, myCreateFileW, &create_file));
 	hookList.push_back(CreateHookingEnvironment(windowsHelper._CreateFileMapping, myCreateFileMapping, &create_file_mapping_w));
 	hookList.push_back(CreateHookingEnvironment(windowsHelper._CreateProcess, myCreateProcessW, &create_process_w));
+
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._AddDllDirectory, AddDllDirectory, add_dll_directory));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._DisableThreadLibraryCalls, DisableThreadLibraryCalls, disable_thread_library_calls));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._FreeLibrary, FreeLibrary, free_library));
 	return hookList;
 }
 

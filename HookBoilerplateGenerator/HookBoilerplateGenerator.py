@@ -34,6 +34,7 @@ class function_declaration():
         self.arguments = []
         self.function_name = ""
         self.return_type = ""
+        self.lowercase_function_name = ""
 
     def parse_function_signature(self):
         # Parse header
@@ -57,12 +58,12 @@ class function_declaration():
 
     def dump_signatures(self):
         arguments_no_io_signature = ", ".join([f"{argument[1]} {argument[2]}" for argument in self.arguments])
-        lowercase_function_name = "_".join([str.lower(word) for word in re.findall('[A-Z][^A-Z]*', self.function_name)])
+        self.lowercase_function_name = "_".join([str.lower(word) for word in re.findall('[A-Z][^A-Z]*', self.function_name)])
         
         # print the lambda function
         print(f"std::function<void({ arguments_no_io_signature })>\n"
-              f"{ lowercase_function_name } = []({ arguments_no_io_signature}) {{\n"
-              f"\t tracingStream << { self.function_name } << endl;\n}};")
+              f"{ self.lowercase_function_name } = []({ arguments_no_io_signature}) {{\n"
+              f"\t tracingStream << \"{ self.function_name }\" << endl;\n}};")
 
         # convert function wrapper parameters
         signature_with_formatted_io = ", ".join([f"{ format_io_sig[argument[0]] } { argument[1] } { argument[2] }" for argument in self.arguments])
@@ -71,8 +72,8 @@ class function_declaration():
         print()
         print(f"void\n"
               f"WINAPI\n"
-              f"{self.function_name}({ signature_with_formatted_io }) {{\n"
-              f"\t{lowercase_function_name}({ ', '.join([argument[2] for argument in self.arguments]) });\n"
+              f"hook{self.function_name}({ signature_with_formatted_io }) {{\n"
+              f"\t{self.lowercase_function_name}({ ', '.join([argument[2] for argument in self.arguments]) });\n"
               f"}}\n")
         print()
 
@@ -95,6 +96,12 @@ print_replace(RAW)
 file = open("function_signatures.txt", "r")
 #print(file.read())
 
+
+win_api_helper_constructor = []
+win_api_func_pointers = [] 
+win_api_hook_install = []
+
+
 # Split on empty lines
 functions = file.read().split("\n\n")
 for func in functions:
@@ -102,6 +109,23 @@ for func in functions:
     x.parse_function_signature()
     x.dump_signatures()
 
+    # Create the extra boilerplate code for the Windows API Helper class
+    win_api_helper_constructor.append(f"_{x.function_name} = m_dll[\"{x.function_name}\"];")
+    win_api_func_pointers.append(f"decltype({x.function_name})* _{x.function_name};")
+    win_api_hook_install.append(f"hookList.push_back(CreateHookingEnvironment(windowsHelper._{x.function_name}, { x.function_name }, { x.lowercase_function_name }));")
+
+for cons_line in win_api_helper_constructor:
+    print(cons_line)
+
+print()
+
+for pointer in win_api_func_pointers:
+    print(pointer) 
+
+print()
+
+for hook in win_api_hook_install:
+    print(hook)
 
 """
 replacement = function_declaration(RAW)
