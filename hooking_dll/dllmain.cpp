@@ -44,6 +44,10 @@ create_file = []
 (LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
 ->void {
 	std::cout << "\n Create_File Lambda: Hooked the createfile function for function\n";
+	cout << "Current thread id is: " << GetCurrentThreadId() << endl;
+	tracingStream << "Create_File, " << "lpFileName: " << lpFileName <<
+		", dwDesiredAccess: " << dwDesiredAccess <<
+		", lpSecurityAttributes: " << lpSecurityAttributes << endl;
 };
 
 void
@@ -58,6 +62,25 @@ myCreateFileW(
 	_In_opt_ HANDLE hTemplateFile
 ) {
 	create_file(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+}
+
+std::function<void(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName)>
+create_file_mapping = [](HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCSTR lpName) -> void {
+	cout << "\n Hooked the create file mapping function.\n";
+};
+
+void
+WINAPI
+myCreateFileMapping(
+	_In_ HANDLE hFile,
+	_In_opt_ LPSECURITY_ATTRIBUTES lpFileMappingAttributes,
+	_In_ DWORD flProtect,
+	_In_ DWORD dwMaximumSizeHigh,
+	_In_ DWORD dwMaximumSizeLow,
+	_In_opt_ LPCSTR lpName
+
+) {
+	create_file_mapping(hFile, lpFileMappingAttributes, flProtect, dwMaximumSizeHigh, dwMaximumSizeLow, lpName);
 }
 
 
@@ -309,7 +332,6 @@ void InitializeTracing() {
 
 	cout << "Full file trace path: " << fullTraceName << endl;
 	tracingStream.open(fullTraceName);
-	tracingStream << "Test";
 }
 
 
