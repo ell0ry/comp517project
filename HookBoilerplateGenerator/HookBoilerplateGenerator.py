@@ -1,5 +1,6 @@
 import re
 import typing
+import os
 
 
 RAW = """BOOL CreateProcessW(
@@ -67,11 +68,13 @@ class function_declaration():
         signature_with_formatted_io = ", ".join([f"{ format_io_sig[argument[0]] } { argument[1] } { argument[2] }" for argument in self.arguments])
 
         # print the full function signature wrapper
+        print()
         print(f"void\n"
               f"WINAPI\n"
               f"{self.function_name}({ signature_with_formatted_io }) {{\n"
               f"\t{lowercase_function_name}({ ', '.join([argument[2] for argument in self.arguments]) });\n"
               f"}}\n")
+        print()
 
 
 
@@ -89,6 +92,19 @@ def print_replace(header):
 print_replace(RAW)
 """
 
+file = open("function_signatures.txt", "r")
+#print(file.read())
+
+# Split on empty lines
+functions = file.read().split("\n\n")
+for func in functions:
+    x = function_declaration(func)
+    x.parse_function_signature()
+    x.dump_signatures()
+
+
+"""
 replacement = function_declaration(RAW)
 replacement.parse_function_signature()
 replacement.dump_signatures()
+"""

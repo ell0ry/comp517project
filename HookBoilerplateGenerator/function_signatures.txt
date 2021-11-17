@@ -1,0 +1,11 @@
+DLL_DIRECTORY_COOKIE AddDllDirectory(
+  [in] PCWSTR NewDirectory
+);
+
+BOOL DisableThreadLibraryCalls(
+  [in] HMODULE hLibModule
+);
+
+BOOL FreeLibrary(
+  [in] HMODULE hLibModule
+);
