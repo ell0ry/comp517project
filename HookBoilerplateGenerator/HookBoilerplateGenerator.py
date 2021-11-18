@@ -112,7 +112,7 @@ for func in functions:
     # Create the extra boilerplate code for the Windows API Helper class
     win_api_helper_constructor.append(f"_{x.function_name} = m_dll[\"{x.function_name}\"];")
     win_api_func_pointers.append(f"decltype({x.function_name})* _{x.function_name};")
-    win_api_hook_install.append(f"hookList.push_back(CreateHookingEnvironment(windowsHelper._{x.function_name}, { x.function_name }, { x.lowercase_function_name }));")
+    win_api_hook_install.append(f"hookList.push_back(CreateHookingEnvironment(windowsHelper._{x.function_name}, hook{ x.function_name }, &{ x.lowercase_function_name }));")
 
 for cons_line in win_api_helper_constructor:
     print(cons_line)

@@ -299,9 +299,9 @@ list<HookInstaller> CreateHooks() {
 	hookList.push_back(CreateHookingEnvironment(windowsHelper._CreateFileMapping, myCreateFileMapping, &create_file_mapping_w));
 	hookList.push_back(CreateHookingEnvironment(windowsHelper._CreateProcess, myCreateProcessW, &create_process_w));
 
-	hookList.push_back(CreateHookingEnvironment(windowsHelper._AddDllDirectory, AddDllDirectory, add_dll_directory));
-	hookList.push_back(CreateHookingEnvironment(windowsHelper._DisableThreadLibraryCalls, DisableThreadLibraryCalls, disable_thread_library_calls));
-	hookList.push_back(CreateHookingEnvironment(windowsHelper._FreeLibrary, FreeLibrary, free_library));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._AddDllDirectory, hookAddDllDirectory, &add_dll_directory));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._DisableThreadLibraryCalls, hookDisableThreadLibraryCalls, &disable_thread_library_calls));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._FreeLibrary, hookFreeLibrary, &free_library));
 	return hookList;
 }
 
