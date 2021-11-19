@@ -103,6 +103,7 @@ win_api_hook_install = []
 
 
 # Split on empty lines
+#functions = file.read().split("START_HERE\n")[1].split("\n\n") use this if you want to indicate where to start
 functions = file.read().split("\n\n")
 for func in functions:
     x = function_declaration(func)
@@ -114,6 +115,7 @@ for func in functions:
     win_api_func_pointers.append(f"decltype({x.function_name})* _{x.function_name};")
     win_api_hook_install.append(f"hookList.push_back(CreateHookingEnvironment(windowsHelper._{x.function_name}, hook{ x.function_name }, &{ x.lowercase_function_name }));")
 
+    
 for cons_line in win_api_helper_constructor:
     print(cons_line)
 
@@ -126,6 +128,7 @@ print()
 
 for hook in win_api_hook_install:
     print(hook)
+
 
 """
 replacement = function_declaration(RAW)
