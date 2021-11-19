@@ -44,6 +44,11 @@ create_file = []
 (LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
 ->void {
 	std::cout << "\n Create_File Lambda: Hooked the createfile function for function\n";
+	// cout << "Current thread id is: " << GetCurrentThreadId() << endl;
+	// tracingStream << "CreateFileW, " << "lpFileName: " << lpFileName <<
+	//	", dwDesiredAccess: " << dwDesiredAccess <<
+	//	", lpSecurityAttributes: " << lpSecurityAttributes << endl;
+	tracingStream << "CreateFileW" << endl;
 };
 
 void
@@ -60,6 +65,344 @@ myCreateFileW(
 	create_file(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 }
 
+// Create File Mapping Hook
+
+std::function<void(HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCWSTR lpName)>
+create_file_mapping_w = [](HANDLE hFile, LPSECURITY_ATTRIBUTES lpFileMappingAttributes, DWORD flProtect, DWORD dwMaximumSizeHigh, DWORD dwMaximumSizeLow, LPCWSTR lpName) -> void {
+	tracingStream << "CreateFileMappingW" << endl;
+};
+
+void
+WINAPI
+myCreateFileMapping(
+	_In_ HANDLE hFile,
+	_In_opt_ LPSECURITY_ATTRIBUTES lpFileMappingAttributes,
+	_In_ DWORD flProtect,
+	_In_ DWORD dwMaximumSizeHigh,
+	_In_ DWORD dwMaximumSizeLow,
+	_In_opt_ LPCWSTR lpName
+
+) {
+	create_file_mapping_w(hFile, lpFileMappingAttributes, flProtect, dwMaximumSizeHigh, dwMaximumSizeLow, lpName);
+}
+
+std::function<void(PCWSTR NewDirectory)>
+add_dll_directory = [](PCWSTR NewDirectory) {
+	tracingStream << "AddDllDirectory" << endl;
+};
+
+void
+WINAPI
+hookAddDllDirectory(_In_ PCWSTR NewDirectory) {
+	add_dll_directory(NewDirectory);
+}
+
+
+std::function<void(HMODULE hLibModule)>
+disable_thread_library_calls = [](HMODULE hLibModule) {
+	tracingStream << "DisableThreadLibraryCalls" << endl;
+};
+
+void
+WINAPI
+hookDisableThreadLibraryCalls(_In_ HMODULE hLibModule) {
+	disable_thread_library_calls(hLibModule);
+}
+
+
+std::function<void(HMODULE hLibModule)>
+free_library = [](HMODULE hLibModule) {
+	tracingStream << "FreeLibrary" << endl;
+};
+
+void
+WINAPI
+hookFreeLibrary(_In_ HMODULE hLibModule) {
+	free_library(hLibModule);
+}
+
+std::function<void(HMODULE hLibModule, DWORD dwExitCode)>
+free_library_and_exit_thread = [](HMODULE hLibModule, DWORD dwExitCode) {
+	tracingStream << "FreeLibraryAndExitThread" << endl;
+};
+
+void
+WINAPI
+hookFreeLibraryAndExitThread(_In_ HMODULE hLibModule, _In_ DWORD dwExitCode) {
+	free_library_and_exit_thread(hLibModule, dwExitCode);
+}
+
+
+std::function<void(DWORD nBufferLength, LPWSTR lpBuffer)>
+get_dll_directory_w = [](DWORD nBufferLength, LPWSTR lpBuffer) {
+	tracingStream << "GetDllDirectoryW" << endl;
+};
+
+void
+WINAPI
+hookGetDllDirectoryW(_In_ DWORD nBufferLength, _Out_ LPWSTR lpBuffer) {
+	get_dll_directory_w(nBufferLength, lpBuffer);
+}
+
+std::function<void(HMODULE hModule, LPWSTR lpFilename, DWORD nSize)>
+get_module_file_name_w = [](HMODULE hModule, LPWSTR lpFilename, DWORD nSize) {
+	tracingStream << "GetModuleFileNameW" << endl;
+};
+
+void
+WINAPI
+hookGetModuleFileNameW(_In_opt_ HMODULE hModule, _Out_ LPWSTR lpFilename, _In_ DWORD nSize) {
+	get_module_file_name_w(hModule, lpFilename, nSize);
+}
+
+
+std::function<void(LPCWSTR lpModuleName)>
+get_module_handle_w = [](LPCWSTR lpModuleName) {
+	tracingStream << "GetModuleHandleW" << endl;
+};
+
+void
+WINAPI
+hookGetModuleHandleW(_In_opt_ LPCWSTR lpModuleName) {
+	get_module_handle_w(lpModuleName);
+}
+
+
+std::function<void(DWORD dwFlags, LPCWSTR lpModuleName, HMODULE* phModule)>
+get_module_handle_ex_w = [](DWORD dwFlags, LPCWSTR lpModuleName, HMODULE* phModule) {
+	tracingStream << "GetModuleHandleExW" << endl;
+};
+
+void
+WINAPI
+hookGetModuleHandleExW(_In_ DWORD dwFlags, _In_opt_ LPCWSTR lpModuleName, _Out_ HMODULE* phModule) {
+	get_module_handle_ex_w(dwFlags, lpModuleName, phModule);
+}
+
+
+std::function<void(HMODULE hModule, LPCSTR lpProcName)>
+get_proc_address = [](HMODULE hModule, LPCSTR lpProcName) {
+	tracingStream << "GetProcAddress" << endl;
+};
+
+void
+WINAPI
+hookGetProcAddress(_In_ HMODULE hModule, _In_ LPCSTR lpProcName) {
+	get_proc_address(hModule, lpProcName);
+}
+
+
+std::function<void(LPCWSTR lpLibFileName)>
+load_library_w = [](LPCWSTR lpLibFileName) {
+	tracingStream << "LoadLibraryW" << endl;
+};
+
+void
+WINAPI
+hookLoadLibraryW(_In_ LPCWSTR lpLibFileName) {
+	load_library_w(lpLibFileName);
+}
+
+std::function<void(DLL_DIRECTORY_COOKIE Cookie)>
+remove_dll_directory = [](DLL_DIRECTORY_COOKIE Cookie) {
+	tracingStream << "RemoveDllDirectory" << endl;
+};
+
+void
+WINAPI
+hookRemoveDllDirectory(_In_ DLL_DIRECTORY_COOKIE Cookie) {
+	remove_dll_directory(Cookie);
+}
+
+
+std::function<void(DWORD DirectoryFlags)>
+set_default_dll_directories = [](DWORD DirectoryFlags) {
+	tracingStream << "SetDefaultDllDirectories" << endl;
+};
+
+void
+WINAPI
+hookSetDefaultDllDirectories(_In_ DWORD DirectoryFlags) {
+	set_default_dll_directories(DirectoryFlags);
+}
+
+
+std::function<void(LPCWSTR lpPathName)>
+set_dll_directory_w = [](LPCWSTR lpPathName) {
+	tracingStream << "SetDllDirectoryW" << endl;
+};
+
+void
+WINAPI
+hookSetDllDirectoryW(_In_opt_ LPCWSTR lpPathName) {
+	set_dll_directory_w(lpPathName);
+}
+
+std::function<void(HANDLE TokenHandle, BOOL DisableAllPrivileges, PTOKEN_PRIVILEGES NewState, DWORD BufferLength, PTOKEN_PRIVILEGES PreviousState, PDWORD ReturnLength)>
+adjust_token_privileges = [](HANDLE TokenHandle, BOOL DisableAllPrivileges, PTOKEN_PRIVILEGES NewState, DWORD BufferLength, PTOKEN_PRIVILEGES PreviousState, PDWORD ReturnLength) {
+	tracingStream << "AdjustTokenPrivileges" << endl;
+};
+
+void
+WINAPI
+hookAdjustTokenPrivileges(_In_ HANDLE TokenHandle, _In_ BOOL DisableAllPrivileges, _In_opt_ PTOKEN_PRIVILEGES NewState, _In_ DWORD BufferLength, _Out_opt_ PTOKEN_PRIVILEGES PreviousState, _Out_opt_ PDWORD ReturnLength) {
+	adjust_token_privileges(TokenHandle, DisableAllPrivileges, NewState, BufferLength, PreviousState, ReturnLength);
+}
+
+
+std::function<void(DWORD idAttach, DWORD idAttachTo, BOOL fAttach)>
+attach_thread_input = [](DWORD idAttach, DWORD idAttachTo, BOOL fAttach) {
+	tracingStream << "AttachThreadInput" << endl;
+};
+
+void
+WINAPI
+hookAttachThreadInput(_In_ DWORD idAttach, _In_ DWORD idAttachTo, _In_ BOOL fAttach) {
+	attach_thread_input(idAttach, idAttachTo, fAttach);
+}
+
+
+std::function<void(HHOOK hhk, int nCode, WPARAM wParam, LPARAM lParam)>
+call_next_hook_ex = [](HHOOK hhk, int nCode, WPARAM wParam, LPARAM lParam) {
+	tracingStream << "CallNextHookEx" << endl;
+};
+
+void
+WINAPI
+hookCallNextHookEx(_In_opt_ HHOOK hhk, _In_ int nCode, _In_ WPARAM wParam, _In_ LPARAM lParam) {
+	call_next_hook_ex(hhk, nCode, wParam, lParam);
+}
+
+
+std::function<void(HCRYPTPROV_LEGACY hProv, LPCSTR szSubsystemProtocol)>
+cert_open_system_store_a = [](HCRYPTPROV_LEGACY hProv, LPCSTR szSubsystemProtocol) {
+	tracingStream << "CertOpenSystemStoreA" << endl;
+};
+
+void
+WINAPI
+hookCertOpenSystemStoreA(_In_ HCRYPTPROV_LEGACY hProv, _In_ LPCSTR szSubsystemProtocol) {
+	cert_open_system_store_a(hProv, szSubsystemProtocol);
+}
+
+
+std::function<void(HANDLE hProcess, PBOOL pbDebuggerPresent)>
+check_remote_debugger_present = [](HANDLE hProcess, PBOOL pbDebuggerPresent) {
+	tracingStream << "CheckRemoteDebuggerPresent" << endl;
+};
+
+void
+WINAPI
+hookCheckRemoteDebuggerPresent(_In_ HANDLE hProcess, _Inout_ PBOOL pbDebuggerPresent) {
+	check_remote_debugger_present(hProcess, pbDebuggerPresent);
+}
+
+
+std::function<void(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID* ppv)>
+co_create_instance = [](REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID* ppv) {
+	tracingStream << "CoCreateInstance" << endl;
+};
+
+void
+WINAPI
+hookCoCreateInstance(_In_ REFCLSID rclsid, _In_ LPUNKNOWN pUnkOuter, _In_ DWORD dwClsContext, _In_ REFIID riid, _Out_ LPVOID* ppv) {
+	co_create_instance(rclsid, pUnkOuter, dwClsContext, riid, ppv);
+}
+
+std::function<void(HANDLE hNamedPipe, LPOVERLAPPED lpOverlapped)>
+connect_named_pipe = [](HANDLE hNamedPipe, LPOVERLAPPED lpOverlapped) {
+	tracingStream << "ConnectNamedPipe" << endl;
+};
+
+void
+WINAPI
+hookConnectNamedPipe(_In_ HANDLE hNamedPipe, _Inout_opt_ LPOVERLAPPED lpOverlapped) {
+	connect_named_pipe(hNamedPipe, lpOverlapped);
+}
+
+
+std::function<void(SC_HANDLE hService, DWORD dwControl, LPSERVICE_STATUS lpServiceStatus)>
+control_service = [](SC_HANDLE hService, DWORD dwControl, LPSERVICE_STATUS lpServiceStatus) {
+	tracingStream << "ControlService" << endl;
+};
+
+void
+WINAPI
+hookControlService(_In_ SC_HANDLE hService, _In_ DWORD dwControl, _Out_ LPSERVICE_STATUS lpServiceStatus) {
+	control_service(hService, dwControl, lpServiceStatus);
+}
+
+
+std::function<void(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)>
+create_file_w = [](LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile) {
+	tracingStream << "CreateFileW" << endl;
+};
+
+void
+WINAPI
+hookCreateFileW(_In_ LPCWSTR lpFileName, _In_ DWORD dwDesiredAccess, _In_ DWORD dwShareMode, _In_opt_ LPSECURITY_ATTRIBUTES lpSecurityAttributes, _In_ DWORD dwCreationDisposition, _In_ DWORD dwFlagsAndAttributes, _In_opt_ HANDLE hTemplateFile) {
+	create_file_w(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+}
+
+
+
+std::function<void(LPSECURITY_ATTRIBUTES lpMutexAttributes, BOOL bInitialOwner, LPCWSTR lpName)>
+create_mutex_w = [](LPSECURITY_ATTRIBUTES lpMutexAttributes, BOOL bInitialOwner, LPCWSTR lpName) {
+	tracingStream << "CreateMutexW" << endl;
+};
+
+void
+WINAPI
+hookCreateMutexW(_In_opt_ LPSECURITY_ATTRIBUTES lpMutexAttributes, _In_ BOOL bInitialOwner, _In_opt_ LPCWSTR lpName) {
+	create_mutex_w(lpMutexAttributes, bInitialOwner, lpName);
+}
+
+
+std::function<void(HANDLE hProcess, LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId)>
+create_remote_thread = [](HANDLE hProcess, LPSECURITY_ATTRIBUTES lpThreadAttributes, SIZE_T dwStackSize, LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter, DWORD dwCreationFlags, LPDWORD lpThreadId) {
+	tracingStream << "CreateRemoteThread" << endl;
+};
+
+void
+WINAPI
+hookCreateRemoteThread(_In_ HANDLE hProcess, _In_ LPSECURITY_ATTRIBUTES lpThreadAttributes, _In_ SIZE_T dwStackSize, _In_ LPTHREAD_START_ROUTINE lpStartAddress, _In_ LPVOID lpParameter, _In_ DWORD dwCreationFlags, _Out_ LPDWORD lpThreadId) {
+	create_remote_thread(hProcess, lpThreadAttributes, dwStackSize, lpStartAddress, lpParameter, dwCreationFlags, lpThreadId);
+}
+
+
+std::function<void(HCRYPTPROV* phProv, LPCWSTR szContainer, LPCWSTR szProvider, DWORD dwProvType, DWORD dwFlags)>
+crypt_acquire_context_w = [](HCRYPTPROV* phProv, LPCWSTR szContainer, LPCWSTR szProvider, DWORD dwProvType, DWORD dwFlags) {
+	tracingStream << "CryptAcquireContextW" << endl;
+};
+
+void
+WINAPI
+hookCryptAcquireContextW(_Out_ HCRYPTPROV* phProv, _In_ LPCWSTR szContainer, _In_ LPCWSTR szProvider, _In_ DWORD dwProvType, _In_ DWORD dwFlags) {
+	crypt_acquire_context_w(phProv, szContainer, szProvider, dwProvType, dwFlags);
+}
+
+
+std::function<void(HANDLE hDevice, DWORD dwIoControlCode, LPVOID lpInBuffer, DWORD nInBufferSize, LPVOID lpOutBuffer, DWORD nOutBufferSize, LPDWORD lpBytesReturned, LPOVERLAPPED lpOverlapped)>
+device_io_control = [](HANDLE hDevice, DWORD dwIoControlCode, LPVOID lpInBuffer, DWORD nInBufferSize, LPVOID lpOutBuffer, DWORD nOutBufferSize, LPDWORD lpBytesReturned, LPOVERLAPPED lpOverlapped) {
+	tracingStream << "DeviceIoControl" << endl;
+};
+
+void
+WINAPI
+hookDeviceIoControl(_In_ HANDLE hDevice, _In_ DWORD dwIoControlCode, _In_opt_ LPVOID lpInBuffer, _In_ DWORD nInBufferSize, _Out_opt_ LPVOID lpOutBuffer, _In_ DWORD nOutBufferSize, _Out_opt_ LPDWORD lpBytesReturned, _Inout_opt_ LPOVERLAPPED lpOverlapped) {
+	device_io_control(hDevice, dwIoControlCode, lpInBuffer, nInBufferSize, lpOutBuffer, nOutBufferSize, lpBytesReturned, lpOverlapped);
+}
+
+std::function<void(LPCWSTR lpApplicationName, LPWSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes, LPSECURITY_ATTRIBUTES lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCWSTR lpCurrentDirectory, LPSTARTUPINFOW lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation)>
+create_process_w = [](LPCWSTR lpApplicationName, LPWSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes, LPSECURITY_ATTRIBUTES lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCWSTR lpCurrentDirectory, LPSTARTUPINFOW lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation) {
+	tracingStream << "CreateProcessW" << endl;
+};
+
+void
+WINAPI
+hookCreateProcessW(_In_opt_ LPCWSTR lpApplicationName, _Inout_opt_ LPWSTR lpCommandLine, _In_opt_ LPSECURITY_ATTRIBUTES lpProcessAttributes, _In_opt_ LPSECURITY_ATTRIBUTES lpThreadAttributes, _In_ BOOL bInheritHandles, _In_ DWORD dwCreationFlags, _In_opt_ LPVOID lpEnvironment, _In_opt_ LPCWSTR lpCurrentDirectory, _In_ LPSTARTUPINFOW lpStartupInfo, _Out_ LPPROCESS_INFORMATION lpProcessInformation) {
+	create_process_w(lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes, bInheritHandles, dwCreationFlags, lpEnvironment, lpCurrentDirectory, lpStartupInfo, lpProcessInformation);
+}
 
 
 // ======================================================  Hooking Helper Classes ============================================== //
@@ -153,8 +496,8 @@ private:
 
 /**
  * @param origFunc original API function
- * @param coreHookLamda core logic to be insert before original API call
- * @param composedFunctionAdd address of function that uses delegates to coreHookLambda
+ * @param composedFunctionAdd address of function that delegates to coreHookLambda
+ * @param coreHookLamda lambda that contains core logic to be insert before original API call
  * @return HookInstaller
  */
 template<typename U, typename...T>
@@ -186,6 +529,38 @@ public:
 		_GetThreadContext = m_dll["GetThreadContext"];
 		_GetTickCount = m_dll["GetTickCount"];
 		_GetWindowsDirectory = m_dll["GetWindowsDirectory"];
+
+		_AddDllDirectory = m_dll["AddDllDirectory"];
+		_DisableThreadLibraryCalls = m_dll["DisableThreadLibraryCalls"];
+		_FreeLibrary = m_dll["FreeLibrary"];
+		_FreeLibraryAndExitThread = m_dll["FreeLibraryAndExitThread"];
+		_GetDllDirectoryW = m_dll["GetDllDirectoryW"];
+		_GetModuleFileNameW = m_dll["GetModuleFileNameW"];
+		_GetModuleHandleW = m_dll["GetModuleHandleW"];
+		_GetModuleHandleExW = m_dll["GetModuleHandleExW"];
+		_GetProcAddress = m_dll["GetProcAddress"];
+		_LoadLibraryW = m_dll["LoadLibraryW"];
+		_RemoveDllDirectory = m_dll["RemoveDllDirectory"];
+		_SetDefaultDllDirectories = m_dll["SetDefaultDllDirectories"];
+		_SetDllDirectoryW = m_dll["SetDllDirectoryW"];
+		_AdjustTokenPrivileges = m_dll["AdjustTokenPrivileges"];
+		_AttachThreadInput = m_dll["AttachThreadInput"];
+		_CallNextHookEx = m_dll["CallNextHookEx"];
+		_CertOpenSystemStoreA = m_dll["CertOpenSystemStoreA"];
+		_CheckRemoteDebuggerPresent = m_dll["CheckRemoteDebuggerPresent"];
+		_CoCreateInstance = m_dll["CoCreateInstance"];
+		_ConnectNamedPipe = m_dll["ConnectNamedPipe"];
+		_ControlService = m_dll["ControlService"];
+		_CreateFileW = m_dll["CreateFileW"];
+		_ConnectNamedPipe = m_dll["ConnectNamedPipe"];
+		_ControlService = m_dll["ControlService"];
+		_CreateFileW = m_dll["CreateFileW"];
+		_CreateMutexW = m_dll["CreateMutexW"];
+		_CreateProcessW = m_dll["CreateProcessW"];
+		_CreateRemoteThread = m_dll["CreateRemoteThread"];
+		_ControlService = m_dll["ControlService"];
+		_CryptAcquireContextW = m_dll["CryptAcquireContextW"];
+		_DeviceIoControl = m_dll["DeviceIoControl"];
 	}
 
 	decltype(Beep)* _Beep;
@@ -195,14 +570,41 @@ public:
 	decltype(CreateFile)* _CreateFile;
 	decltype(CreateFileMapping)* _CreateFileMapping;
 	decltype(CreateProcess)* _CreateProcess;
-	decltype(CreateRemoteThread)* _CreateRemoteThread;
 	decltype(CryptAcquireContext)* _CryptAcquireContext;
 	decltype(gethostbyname)* _gethostbyname;
 	decltype(GetModuleFileName)* _GetModuleFilename;
-	decltype(GetProcAddress)* _GetProcAddress;
 	decltype(GetThreadContext)* _GetThreadContext;
 	decltype(GetTickCount)* _GetTickCount;
 	decltype(GetWindowsDirectory)* _GetWindowsDirectory;
+
+	decltype(AddDllDirectory)* _AddDllDirectory;
+	decltype(DisableThreadLibraryCalls)* _DisableThreadLibraryCalls;
+	decltype(FreeLibrary)* _FreeLibrary;
+	decltype(FreeLibraryAndExitThread)* _FreeLibraryAndExitThread;
+	decltype(GetDllDirectoryW)* _GetDllDirectoryW;
+	decltype(GetModuleFileNameW)* _GetModuleFileNameW;
+	decltype(GetModuleHandleW)* _GetModuleHandleW;
+	decltype(GetModuleHandleExW)* _GetModuleHandleExW;
+	decltype(GetProcAddress)* _GetProcAddress;
+	decltype(LoadLibraryW)* _LoadLibraryW;
+	decltype(RemoveDllDirectory)* _RemoveDllDirectory;
+	decltype(SetDefaultDllDirectories)* _SetDefaultDllDirectories;
+	decltype(SetDllDirectoryW)* _SetDllDirectoryW;
+	decltype(AdjustTokenPrivileges)* _AdjustTokenPrivileges;
+	decltype(AttachThreadInput)* _AttachThreadInput;
+	decltype(CallNextHookEx)* _CallNextHookEx;
+	decltype(CertOpenSystemStoreA)* _CertOpenSystemStoreA;
+	decltype(CheckRemoteDebuggerPresent)* _CheckRemoteDebuggerPresent;
+	decltype(CoCreateInstance)* _CoCreateInstance;
+	decltype(ConnectNamedPipe)* _ConnectNamedPipe;
+	decltype(CreateFileW)* _CreateFileW;
+	decltype(CreateMutexW)* _CreateMutexW;
+	decltype(CreateProcessW)* _CreateProcessW;
+	decltype(CreateRemoteThread)* _CreateRemoteThread;
+	decltype(ControlService)* _ControlService;
+	decltype(CryptAcquireContextW)* _CryptAcquireContextW;
+	decltype(DeviceIoControl)* _DeviceIoControl;
+
 
 private:
 	DllHelper m_dll;
@@ -215,6 +617,35 @@ list<HookInstaller> CreateHooks() {
 
 	//add specific hooks
 	hookList.push_back(CreateHookingEnvironment(windowsHelper._CreateFile, myCreateFileW, &create_file));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._CreateFileMapping, myCreateFileMapping, &create_file_mapping_w));
+
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._AddDllDirectory, hookAddDllDirectory, &add_dll_directory));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._DisableThreadLibraryCalls, hookDisableThreadLibraryCalls, &disable_thread_library_calls));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._FreeLibrary, hookFreeLibrary, &free_library));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._FreeLibraryAndExitThread, hookFreeLibraryAndExitThread, &free_library_and_exit_thread));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._GetDllDirectoryW, hookGetDllDirectoryW, &get_dll_directory_w));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._GetModuleFileNameW, hookGetModuleFileNameW, &get_module_file_name_w));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._GetModuleHandleW, hookGetModuleHandleW, &get_module_handle_w));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._GetModuleHandleExW, hookGetModuleHandleExW, &get_module_handle_ex_w));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._GetProcAddress, hookGetProcAddress, &get_proc_address));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._LoadLibraryW, hookLoadLibraryW, &load_library_w));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._RemoveDllDirectory, hookRemoveDllDirectory, &remove_dll_directory));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._SetDefaultDllDirectories, hookSetDefaultDllDirectories, &set_default_dll_directories));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._SetDllDirectoryW, hookSetDllDirectoryW, &set_dll_directory_w));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._AdjustTokenPrivileges, hookAdjustTokenPrivileges, &adjust_token_privileges));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._AttachThreadInput, hookAttachThreadInput, &attach_thread_input));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._CallNextHookEx, hookCallNextHookEx, &call_next_hook_ex));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._CertOpenSystemStoreA, hookCertOpenSystemStoreA, &cert_open_system_store_a));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._CheckRemoteDebuggerPresent, hookCheckRemoteDebuggerPresent, &check_remote_debugger_present));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._CoCreateInstance, hookCoCreateInstance, &co_create_instance));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._ConnectNamedPipe, hookConnectNamedPipe, &connect_named_pipe));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._CreateFileW, hookCreateFileW, &create_file_w));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._CreateMutexW, hookCreateMutexW, &create_mutex_w));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._CreateProcessW, hookCreateProcessW, &create_process_w));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._CreateRemoteThread, hookCreateRemoteThread, &create_remote_thread));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._ControlService, hookControlService, &control_service));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._CryptAcquireContextW, hookCryptAcquireContextW, &crypt_acquire_context_w));
+	hookList.push_back(CreateHookingEnvironment(windowsHelper._DeviceIoControl, hookDeviceIoControl, &device_io_control));
 	return hookList;
 }
 
@@ -309,7 +740,6 @@ void InitializeTracing() {
 
 	cout << "Full file trace path: " << fullTraceName << endl;
 	tracingStream.open(fullTraceName);
-	tracingStream << "Test";
 }
 
 

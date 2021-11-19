@@ -1,0 +1,178 @@
+DLL_DIRECTORY_COOKIE AddDllDirectory(
+  [in] PCWSTR NewDirectory
+);
+
+BOOL DisableThreadLibraryCalls(
+  [in] HMODULE hLibModule
+);
+
+BOOL FreeLibrary(
+  [in] HMODULE hLibModule
+);
+
+void FreeLibraryAndExitThread(
+  [in] HMODULE hLibModule,
+  [in] DWORD   dwExitCode
+);
+
+DWORD GetDllDirectoryW(
+  [in]  DWORD  nBufferLength,
+  [out] LPWSTR lpBuffer
+);
+
+DWORD GetModuleFileNameW(
+  [in, optional] HMODULE hModule,
+  [out]          LPWSTR  lpFilename,
+  [in]           DWORD   nSize
+);
+
+HMODULE GetModuleHandleW(
+  [in, optional] LPCWSTR lpModuleName
+);
+
+BOOL GetModuleHandleExW(
+  [in]           DWORD   dwFlags,
+  [in, optional] LPCWSTR lpModuleName,
+  [out]          HMODULE *phModule
+);
+
+FARPROC GetProcAddress(
+  [in] HMODULE hModule,
+  [in] LPCSTR  lpProcName
+);
+
+HMODULE LoadLibraryW(
+  [in] LPCWSTR lpLibFileName
+);
+
+BOOL RemoveDllDirectory(
+  [in] DLL_DIRECTORY_COOKIE Cookie
+);
+
+BOOL SetDefaultDllDirectories(
+  [in] DWORD DirectoryFlags
+);
+
+BOOL SetDllDirectoryW(
+  [in, optional] LPCWSTR lpPathName
+);
+
+BOOL AdjustTokenPrivileges(
+  [in]            HANDLE            TokenHandle,
+  [in]            BOOL              DisableAllPrivileges,
+  [in, optional]  PTOKEN_PRIVILEGES NewState,
+  [in]            DWORD             BufferLength,
+  [out, optional] PTOKEN_PRIVILEGES PreviousState,
+  [out, optional] PDWORD            ReturnLength
+);
+
+BOOL AttachThreadInput(
+  [in] DWORD idAttach,
+  [in] DWORD idAttachTo,
+  [in] BOOL  fAttach
+);
+
+LRESULT CallNextHookEx(
+  [in, optional] HHOOK  hhk,
+  [in]           int    nCode,
+  [in]           WPARAM wParam,
+  [in]           LPARAM lParam
+);
+
+HCERTSTORE CertOpenSystemStoreA(
+  [in] HCRYPTPROV_LEGACY hProv,
+  [in] LPCSTR            szSubsystemProtocol
+);
+
+BOOL CheckRemoteDebuggerPresent(
+  [in]      HANDLE hProcess,
+  [in, out] PBOOL  pbDebuggerPresent
+);
+
+HRESULT CoCreateInstance(
+  [in]  REFCLSID  rclsid,
+  [in]  LPUNKNOWN pUnkOuter,
+  [in]  DWORD     dwClsContext,
+  [in]  REFIID    riid,
+  [out] LPVOID    *ppv
+);
+
+BOOL ConnectNamedPipe(
+  [in]                HANDLE       hNamedPipe,
+  [in, out, optional] LPOVERLAPPED lpOverlapped
+);
+
+BOOL ControlService(
+  [in]  SC_HANDLE        hService,
+  [in]  DWORD            dwControl,
+  [out] LPSERVICE_STATUS lpServiceStatus
+);
+
+HANDLE CreateFileW(
+  [in]           LPCWSTR               lpFileName,
+  [in]           DWORD                 dwDesiredAccess,
+  [in]           DWORD                 dwShareMode,
+  [in, optional] LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+  [in]           DWORD                 dwCreationDisposition,
+  [in]           DWORD                 dwFlagsAndAttributes,
+  [in, optional] HANDLE                hTemplateFile
+);
+
+HANDLE CreateMutexW(
+  [in, optional] LPSECURITY_ATTRIBUTES lpMutexAttributes,
+  [in]           BOOL                  bInitialOwner,
+  [in, optional] LPCWSTR               lpName
+);
+
+HANDLE CreateRemoteThread(
+  [in]  HANDLE                 hProcess,
+  [in]  LPSECURITY_ATTRIBUTES  lpThreadAttributes,
+  [in]  SIZE_T                 dwStackSize,
+  [in]  LPTHREAD_START_ROUTINE lpStartAddress,
+  [in]  LPVOID                 lpParameter,
+  [in]  DWORD                  dwCreationFlags,
+  [out] LPDWORD                lpThreadId
+);
+
+BOOL ControlService(
+  [in]  SC_HANDLE        hService,
+  [in]  DWORD            dwControl,
+  [out] LPSERVICE_STATUS lpServiceStatus
+);
+
+HANDLE CreateToolhelp32Snapshot(
+  [in] DWORD dwFlags,
+  [in] DWORD th32ProcessID
+);
+
+BOOL CryptAcquireContextW(
+  [out] HCRYPTPROV *phProv,
+  [in]  LPCWSTR    szContainer,
+  [in]  LPCWSTR    szProvider,
+  [in]  DWORD      dwProvType,
+  [in]  DWORD      dwFlags
+);
+
+BOOL DeviceIoControl(
+  [in]                HANDLE       hDevice,
+  [in]                DWORD        dwIoControlCode,
+  [in, optional]      LPVOID       lpInBuffer,
+  [in]                DWORD        nInBufferSize,
+  [out, optional]     LPVOID       lpOutBuffer,
+  [in]                DWORD        nOutBufferSize,
+  [out, optional]     LPDWORD      lpBytesReturned,
+  [in, out, optional] LPOVERLAPPED lpOverlapped
+);
+
+BOOL CreateProcessW(
+  [in, optional]      LPCWSTR               lpApplicationName,
+  [in, out, optional] LPWSTR                lpCommandLine,
+  [in, optional]      LPSECURITY_ATTRIBUTES lpProcessAttributes,
+  [in, optional]      LPSECURITY_ATTRIBUTES lpThreadAttributes,
+  [in]                BOOL                  bInheritHandles,
+  [in]                DWORD                 dwCreationFlags,
+  [in, optional]      LPVOID                lpEnvironment,
+  [in, optional]      LPCWSTR               lpCurrentDirectory,
+  [in]                LPSTARTUPINFOW        lpStartupInfo,
+  [out]               LPPROCESS_INFORMATION lpProcessInformation
+);
